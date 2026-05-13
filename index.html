@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>HEALTH EYE PRO | WhatsApp Clinical Alerts</title>
+    <title>HEALTH EYE PRO | Clinical Sentinel Dashboard</title>
     <!-- Bootstrap 5 + Icons + Fonts + Charts -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -96,20 +96,6 @@
             border-color: #58a6ff;
             box-shadow: 0 0 8px #58a6ff;
         }
-        .btn-whatsapp {
-            background: #25D366;
-            border: none;
-            color: white;
-            border-radius: 40px;
-            transition: 0.2s;
-            font-weight: 600;
-        }
-        .btn-whatsapp:hover {
-            background: #128C7E;
-            color: white;
-            box-shadow: 0 0 10px #25D366;
-            transform: scale(1.02);
-        }
         .badge-critical {
             background: #f85149;
             color: white;
@@ -134,10 +120,6 @@
             padding: 0.2rem 0.6rem;
             border-radius: 50px;
             display: inline-block;
-        }
-        .whatsapp-badge {
-            background: rgba(37, 211, 102, 0.2);
-            border-left: 3px solid #25D366;
         }
         footer { font-size: 0.7rem; color: #5e6f8d; }
         @media (max-width: 768px) {
@@ -223,7 +205,7 @@
             </div>
         </div>
 
-        <!-- Clinical Alert Hub with WhatsApp integration -->
+        <!-- Clinical Alert Hub (no WhatsApp, only sound+notifications) -->
         <div class="col-md-12 col-lg-4">
             <div class="vital-card p-4 h-100 glass-panel">
                 <div class="d-flex align-items-center gap-2 mb-3">
@@ -238,21 +220,13 @@
                     <p class="small text-muted mb-1"><i class="fas fa-clock"></i> Last vitals update</p>
                     <div id="lastUpdateTime" class="fw-semibold">—:—:—</div>
                     <hr class="bg-secondary my-2">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between">
                         <span><i class="fas fa-chart-simple"></i> AI Insight:</span>
                         <span id="aiInsight" class="text-info fw-light">Awaiting data...</span>
                     </div>
                     <hr class="bg-secondary my-2">
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                        <div class="small text-secondary">
-                            <i class="fab fa-whatsapp text-success"></i> WhatsApp nurse:
-                        </div>
-                        <button id="manualWhatsAppBtn" class="btn btn-whatsapp btn-sm px-3">
-                            <i class="fab fa-whatsapp me-1"></i> Send Alert Now
-                        </button>
-                    </div>
-                    <div class="mt-2 small whatsapp-badge p-2 rounded">
-                        <i class="fas fa-info-circle"></i> Critical alerts automatically open WhatsApp to <strong>+254712836067</strong> with pre‑filled patient data.
+                    <div class="small text-secondary">
+                        <i class="fas fa-bell"></i> <strong>Audio + push alerts</strong> when thresholds are breached
                     </div>
                 </div>
             </div>
@@ -296,23 +270,18 @@
     </div>
     <footer class="text-center mt-5 pt-3 border-top border-secondary border-opacity-25">
         <i class="fas fa-eye"></i> HEALTH EYE PRO · WALUMBE · Thresholds: Temp 31-38°C, HR 40-100 BPM<br>
-        <i class="fab fa-whatsapp"></i> WhatsApp alerts to <strong>+254712836067</strong> · Unique audible alert + push notifications
+        <i class="fas fa-bell"></i> Unique audible alert + browser notifications | No external messaging required
     </footer>
 </div>
 
 <script>
-    // ======================== WHATSAPP & ALERT SOUND LOGIC ========================
-    const NURSE_WHATSAPP = "254712836067";   // international format without '+' for wa.me
-    const PATIENT_ID = "Bed A-12";
-    
-    // Create unique alert sound using Web Audio API (two-tone beep)
+    // ======================== UNIQUE AUDIBLE ALERT ========================
     let audioCtx = null;
     function playAlertSound() {
         try {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            // Resume if suspended (browser policy)
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -324,25 +293,22 @@
             osc1.connect(gain);
             osc2.connect(gain);
             gain.connect(audioCtx.destination);
-            
-            osc1.frequency.value = 880; // A5
+            osc1.frequency.value = 880;
             osc2.frequency.value = 720;
             osc1.type = 'sine';
             osc2.type = 'sine';
-            
             osc1.start();
             osc2.start();
             gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
             osc1.stop(now + 0.8);
             osc2.stop(now + 0.8);
             
-            // second beep
             const osc3 = audioCtx.createOscillator();
             const gain2 = audioCtx.createGain();
             gain2.gain.value = 0.35;
             osc3.connect(gain2);
             gain2.connect(audioCtx.destination);
-            osc3.frequency.value = 1046.5; // C6
+            osc3.frequency.value = 1046.5;
             osc3.type = 'square';
             osc3.start(now + 0.9);
             gain2.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
@@ -355,26 +321,6 @@
         if (Notification.permission === 'granted') {
             new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/4228/4228704.png', tag: 'clinical-alert' });
         }
-    }
-    
-    // Generate WhatsApp message text based on current vitals & violation
-    function generateWhatsAppMessage(temp, hr, alertFlag, violationReason) {
-        let alertMsg = "";
-        if (alertFlag === 1) alertMsg = "🚨 HARDWARE ALERT FLAG (field3=1) - immediate check required!";
-        else if (violationReason.includes("Temp")) alertMsg = `🌡️ Temperature CRITICAL: ${temp.toFixed(1)}°C (safe range 31-38°C)`;
-        else if (violationReason.includes("HR")) alertMsg = `💓 Heart Rate CRITICAL: ${hr} BPM (safe range 40-100)`;
-        else alertMsg = violationReason;
-        
-        const timestamp = new Date().toLocaleString();
-        return `🚨 *HEALTH EYE PRO - CLINICAL ALERT* 🚨\n\nPatient: ${PATIENT_ID}\nTemperature: ${temp.toFixed(1)} °C\nHeart Rate: ${hr} BPM\n\n⚠️ *${alertMsg}*\n\n🕒 Time: ${timestamp}\n📍 Device: ESP32-S3\n\nPlease assess patient immediately. Respond to this message.`;
-    }
-    
-    // Open WhatsApp with pre-filled message (wa.me link)
-    function sendWhatsAppAlert(temp, hr, alertFlag, violationReason) {
-        const message = generateWhatsAppMessage(temp, hr, alertFlag, violationReason);
-        const encodedMsg = encodeURIComponent(message);
-        const waLink = `https://wa.me/${NURSE_WHATSAPP}?text=${encodedMsg}`;
-        window.open(waLink, '_blank');
     }
     
     // ======================== THINGSPEAK & DASHBOARD LOGIC ========================
@@ -555,22 +501,17 @@
                 else if (hrOut) emergencyMsgSpan.innerText = `⚠️ HR CRITICAL: ${hr} BPM outside [40-100]`;
                 alertFlagDisplay.innerHTML = '<span class="badge badge-critical"><i class="fas fa-skull-crosswalk"></i> EMERGENCY MODE ACTIVE</span>';
                 
-                // Play unique sound
+                // Unique sound + push notification
                 playAlertSound();
-                // Push notification
                 if (Notification.permission === 'granted') {
                     sendPushNotification('🚨 HEALTH EYE PRO ALERT', `Violation: ${violationReason} | Temp ${temp.toFixed(1)}°C, HR ${hr} BPM`);
-                }
-                // WhatsApp auto-send on new violation (open chat with pre-filled message)
-                if (!lastViolationState) {
-                    sendWhatsAppAlert(temp, hr, alertFlag, violationReason);
                 }
                 lastEmergencyState = true;
                 lastViolationState = true;
                 lastViolationReason = violationReason;
             } else {
                 emergencyBanner.classList.add('d-none');
-                alertFlagDisplay.innerHTML = '<span class="badge bg-secondary"><i class="fas fa-check-circle"></i> Stable - All vitals within safe ranges (temp 31-38, HR 40-100)</span>';
+                alertFlagDisplay.innerHTML = '<span class="badge bg-secondary"><i class="fas fa-check-circle"></i> Stable - All vitals within safe ranges</span>';
                 lastEmergencyState = false;
                 lastViolationState = false;
             }
@@ -611,26 +552,14 @@
         } else {
             sendPushNotification('HEALTH EYE PRO', 'Notifications already enabled');
         }
-        // Also try to resume audio context for sound
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     }
-    
-    // Manual WhatsApp button: uses latest known vitals
-    document.getElementById('manualWhatsAppBtn').addEventListener('click', () => {
-        if (lastTemp && lastHr) {
-            sendWhatsAppAlert(lastTemp, lastHr, 0, "Manual alert from dashboard");
-        } else {
-            sendWhatsAppAlert(36.5, 75, 0, "Manual test alert");
-        }
-    });
     
     window.addEventListener('load', () => {
         startRefreshCycle();
         document.getElementById('manualRefreshBtn').addEventListener('click', manualRefresh);
         document.getElementById('alertPermBtn').addEventListener('click', requestNotificationPerm);
-        // pre-initialize audio context on first user interaction
+        // Resume audio on first user click
         document.body.addEventListener('click', () => {
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }, { once: true });
