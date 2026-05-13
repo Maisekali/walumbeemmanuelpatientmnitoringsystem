@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>HEALTH EYE PRO | Clinical Sentinel Dashboard</title>
+    <title>HEALTH EYE PRO | WhatsApp Clinical Alerts</title>
     <!-- Bootstrap 5 + Icons + Fonts + Charts -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- EmailJS SDK for real email alerts -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -98,6 +96,20 @@
             border-color: #58a6ff;
             box-shadow: 0 0 8px #58a6ff;
         }
+        .btn-whatsapp {
+            background: #25D366;
+            border: none;
+            color: white;
+            border-radius: 40px;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+        .btn-whatsapp:hover {
+            background: #128C7E;
+            color: white;
+            box-shadow: 0 0 10px #25D366;
+            transform: scale(1.02);
+        }
         .badge-critical {
             background: #f85149;
             color: white;
@@ -123,7 +135,10 @@
             border-radius: 50px;
             display: inline-block;
         }
-        .email-status { font-size: 0.7rem; cursor: pointer; }
+        .whatsapp-badge {
+            background: rgba(37, 211, 102, 0.2);
+            border-left: 3px solid #25D366;
+        }
         footer { font-size: 0.7rem; color: #5e6f8d; }
         @media (max-width: 768px) {
             .vital-value { font-size: 2.8rem; }
@@ -144,14 +159,13 @@
                 <span><i class="fas fa-network-wired me-1"></i> MaiseTech Core</span>
                 <span><i class="fas fa-microchip me-1"></i> ESP32-S3 | Bed A-12</span>
                 <span class="range-hint"><i class="fas fa-thermometer-half"></i> Temp norm: 31–38°C</span>
-                <span class="range-hint"><i class="fas fa-heartbeat"></i> HR norm: 60–100 BPM</span>
+                <span class="range-hint"><i class="fas fa-heartbeat"></i> HR norm: 40–100 BPM</span>
             </div>
         </div>
         <div class="mt-2 mt-md-0">
             <div class="d-flex gap-2">
                 <button id="manualRefreshBtn" class="btn btn-neon btn-sm"><i class="fas fa-sync-alt me-1"></i> Sync now</button>
-                <button id="alertPermBtn" class="btn btn-outline-info btn-sm"><i class="fas fa-bell"></i> Enable alerts</button>
-                <button id="testEmailBtn" class="btn btn-outline-warning btn-sm" title="Test email configuration"><i class="fas fa-envelope"></i> Test email</button>
+                <button id="alertPermBtn" class="btn btn-outline-info btn-sm"><i class="fas fa-bell"></i> Enable notifications</button>
             </div>
         </div>
     </div>
@@ -201,7 +215,7 @@
                     <div id="hrTrend" class="small mt-2"><i class="fas fa-heartbeat"></i> <span id="hrStatusText">Monitoring</span></div>
                 </div>
                 <div class="d-flex justify-content-between small text-secondary px-1 mb-1">
-                    <span>⚠️ &lt;60</span><span>✅ 60–100</span><span>⚠️ &gt;100</span>
+                    <span>⚠️ &lt;40</span><span>✅ 40–100</span><span>⚠️ &gt;100</span>
                 </div>
                 <div class="progress mx-2" style="height: 6px; background: #1f2a3e;">
                     <div id="hrGauge" class="progress-bar bg-danger" style="width: 0%"></div>
@@ -209,7 +223,7 @@
             </div>
         </div>
 
-        <!-- Clinical Alert Hub -->
+        <!-- Clinical Alert Hub with WhatsApp integration -->
         <div class="col-md-12 col-lg-4">
             <div class="vital-card p-4 h-100 glass-panel">
                 <div class="d-flex align-items-center gap-2 mb-3">
@@ -224,12 +238,21 @@
                     <p class="small text-muted mb-1"><i class="fas fa-clock"></i> Last vitals update</p>
                     <div id="lastUpdateTime" class="fw-semibold">—:—:—</div>
                     <hr class="bg-secondary my-2">
-                    <div class="d-flex justify-content-between">
-                        <span><i class="fas fa-chart-simple"></i> AI Clinical Insight:</span>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-chart-simple"></i> AI Insight:</span>
                         <span id="aiInsight" class="text-info fw-light">Awaiting data...</span>
                     </div>
-                    <div class="mt-2 small text-secondary">
-                        <i class="fas fa-envelope"></i> Email alerts: <span id="emailStatusIcon" class="text-info">ontieribrayoo@gmail.com</span>
+                    <hr class="bg-secondary my-2">
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <div class="small text-secondary">
+                            <i class="fab fa-whatsapp text-success"></i> WhatsApp nurse:
+                        </div>
+                        <button id="manualWhatsAppBtn" class="btn btn-whatsapp btn-sm px-3">
+                            <i class="fab fa-whatsapp me-1"></i> Send Alert Now
+                        </button>
+                    </div>
+                    <div class="mt-2 small whatsapp-badge p-2 rounded">
+                        <i class="fas fa-info-circle"></i> Critical alerts automatically open WhatsApp to <strong>+254712836067</strong> with pre‑filled patient data.
                     </div>
                 </div>
             </div>
@@ -243,7 +266,7 @@
             <div class="refresh-timer mt-1 mt-sm-0"><i class="fas fa-sync-alt fa-fw"></i> Auto‑refresh: <span id="countdownSec">15</span>s</div>
         </div>
         <canvas id="vitalsChart" width="400" height="200" style="max-height: 360px; width: 100%;"></canvas>
-        <div class="text-end mt-2"><small class="text-secondary">Temp (°C) safe 31-38 | HR (BPM) safe 60-100 | dual axis</small></div>
+        <div class="text-end mt-2"><small class="text-secondary">Temp (°C) safe 31-38 | HR (BPM) safe 40-100 | dual axis</small></div>
     </div>
 
     <!-- History table -->
@@ -257,7 +280,7 @@
                 <div class="table-responsive">
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead>
-                            <tr><th>Timestamp</th><th>Temp (°C)</th><th>Heart Rate (BPM)</th><th>Alert flag</th><th>Status (threshold)</th></tr>
+                            <tr><th>Timestamp</th><th>Temp (°C)</th><th>Heart Rate (BPM)</th><th>Alert flag</th><th>Status</th></tr>
                         </thead>
                         <tbody id="historyTableBody">
                             <tr><td colspan="5" class="text-center text-muted">Loading stream...</td></tr>
@@ -272,101 +295,86 @@
         </div>
     </div>
     <footer class="text-center mt-5 pt-3 border-top border-secondary border-opacity-25">
-        <i class="fas fa-eye"></i> HEALTH EYE PRO · WALUMBE · Thresholds: Temp 31-38°C, HR 60-100 BPM · Email alerts to ontieribrayoo@gmail.com
+        <i class="fas fa-eye"></i> HEALTH EYE PRO · WALUMBE · Thresholds: Temp 31-38°C, HR 40-100 BPM<br>
+        <i class="fab fa-whatsapp"></i> WhatsApp alerts to <strong>+254712836067</strong> · Unique audible alert + push notifications
     </footer>
 </div>
 
 <script>
-    // ======================== EMAILJS CONFIGURATION ========================
-    // To enable real email sending, sign up at https://www.emailjs.com/ (free), create a service (Gmail, etc.),
-    // create an email template with variables {{temp}}, {{hr}}, {{alertMsg}}, {{time}}.
-    // Then replace the placeholders below with your Public Key, Service ID, Template ID.
-    // This demo includes a test button and fallback console log + UI notification if credentials missing.
-    // Email sending is triggered automatically when ANY threshold is violated (temp outside 31-38 OR hr outside 60-100 OR field3 = 1)
-    // with cooldown (60 seconds) to avoid spam.
+    // ======================== WHATSAPP & ALERT SOUND LOGIC ========================
+    const NURSE_WHATSAPP = "254712836067";   // international format without '+' for wa.me
+    const PATIENT_ID = "Bed A-12";
     
-    // ---------- EMAILJS CREDENTIALS (REPLACE WITH YOUR OWN) ----------
-    const EMAILJS_CONFIG = {
-        PUBLIC_KEY: "YOUR_EMAILJS_PUBLIC_KEY",   // replace with your EmailJS public key
-        SERVICE_ID: "service_your_service_id",  // replace with your EmailJS service ID
-        TEMPLATE_ID: "template_your_template_id" // replace with your EmailJS template ID
-    };
-    let emailConfigured = false;
-    
-    // Initialize EmailJS if public key is provided (not placeholder)
-    if (EMAILJS_CONFIG.PUBLIC_KEY && EMAILJS_CONFIG.PUBLIC_KEY !== "YOUR_EMAILJS_PUBLIC_KEY") {
-        emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
-        emailConfigured = true;
-        console.log("✅ EmailJS initialized. Email alerts will be sent.");
-    } else {
-        console.warn("⚠️ EmailJS not configured. Please set your EmailJS credentials in the script. Emails will be simulated in console.");
+    // Create unique alert sound using Web Audio API (two-tone beep)
+    let audioCtx = null;
+    function playAlertSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Resume if suspended (browser policy)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const now = audioCtx.currentTime;
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.3;
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc1.frequency.value = 880; // A5
+            osc2.frequency.value = 720;
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+            
+            osc1.start();
+            osc2.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+            osc1.stop(now + 0.8);
+            osc2.stop(now + 0.8);
+            
+            // second beep
+            const osc3 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            gain2.gain.value = 0.35;
+            osc3.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc3.frequency.value = 1046.5; // C6
+            osc3.type = 'square';
+            osc3.start(now + 0.9);
+            gain2.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+            osc3.stop(now + 1.5);
+        } catch(e) { console.warn("Audio error", e); }
     }
     
-    // Cooldown to avoid email flooding (60 seconds between emails for same violation state)
-    let lastEmailSentTime = 0;
-    const EMAIL_COOLDOWN_MS = 60000;
-    
-    // Function to send email using EmailJS
-    async function sendThresholdAlertEmail(temp, hr, alertFlag, violationReason) {
-        const now = Date.now();
-        if (now - lastEmailSentTime < EMAIL_COOLDOWN_MS) {
-            console.log("⏳ Email cooldown active, skipping to avoid spam.");
-            return false;
+    // Push notification helper
+    function sendPushNotification(title, body) {
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/4228/4228704.png', tag: 'clinical-alert' });
         }
-        
-        const timeStr = new Date().toLocaleString();
+    }
+    
+    // Generate WhatsApp message text based on current vitals & violation
+    function generateWhatsAppMessage(temp, hr, alertFlag, violationReason) {
         let alertMsg = "";
-        if (alertFlag === 1) alertMsg = "🚨 CRITICAL: Hardware alert flag (field3=1)";
-        else if (violationReason.includes("Temp")) alertMsg = `🌡️ Temperature violation: ${temp.toFixed(1)}°C (safe range 31-38°C)`;
-        else if (violationReason.includes("HR")) alertMsg = `💓 Heart rate violation: ${hr} BPM (safe range 60-100)`;
+        if (alertFlag === 1) alertMsg = "🚨 HARDWARE ALERT FLAG (field3=1) - immediate check required!";
+        else if (violationReason.includes("Temp")) alertMsg = `🌡️ Temperature CRITICAL: ${temp.toFixed(1)}°C (safe range 31-38°C)`;
+        else if (violationReason.includes("HR")) alertMsg = `💓 Heart Rate CRITICAL: ${hr} BPM (safe range 40-100)`;
         else alertMsg = violationReason;
         
-        const emailParams = {
-            to_email: "ontieribrayoo@gmail.com",
-            temp: temp.toFixed(1),
-            heart_rate: hr,
-            alert_message: alertMsg,
-            timestamp: timeStr,
-            patient_id: "Bed A-12"
-        };
-        
-        if (emailConfigured) {
-            try {
-                const response = await emailjs.send(
-                    EMAILJS_CONFIG.SERVICE_ID,
-                    EMAILJS_CONFIG.TEMPLATE_ID,
-                    emailParams
-                );
-                console.log("✅ Email sent successfully!", response);
-                lastEmailSentTime = now;
-                // Show temporary UI notification
-                showToastMessage("📧 Alert email sent to ontieribrayoo@gmail.com", "success");
-                return true;
-            } catch (error) {
-                console.error("❌ Email sending failed:", error);
-                showToastMessage("Email failed: check console & EmailJS config", "danger");
-                return false;
-            }
-        } else {
-            // Simulation mode: log to console and show alert
-            console.log("📧 SIMULATED EMAIL (EmailJS not configured):", emailParams);
-            showToastMessage("⚠️ SIMULATION: Email would be sent to ontieribrayoo@gmail.com (configure EmailJS)", "warning");
-            lastEmailSentTime = now;
-            return false;
-        }
+        const timestamp = new Date().toLocaleString();
+        return `🚨 *HEALTH EYE PRO - CLINICAL ALERT* 🚨\n\nPatient: ${PATIENT_ID}\nTemperature: ${temp.toFixed(1)} °C\nHeart Rate: ${hr} BPM\n\n⚠️ *${alertMsg}*\n\n🕒 Time: ${timestamp}\n📍 Device: ESP32-S3\n\nPlease assess patient immediately. Respond to this message.`;
     }
     
-    // Simple toast / temporary banner for email status
-    function showToastMessage(msg, type = "info") {
-        const toastDiv = document.createElement("div");
-        toastDiv.className = `alert alert-${type === "success" ? "success" : type === "danger" ? "danger" : "warning"} position-fixed top-0 end-0 m-3 p-2 small`;
-        toastDiv.style.zIndex = 9999;
-        toastDiv.style.background = "#1a1f2e";
-        toastDiv.style.color = "#fff";
-        toastDiv.style.borderLeft = `4px solid ${type === "success" ? "#2ea043" : "#f85149"}`;
-        toastDiv.innerHTML = `<i class="fas fa-envelope me-1"></i> ${msg}`;
-        document.body.appendChild(toastDiv);
-        setTimeout(() => toastDiv.remove(), 4000);
+    // Open WhatsApp with pre-filled message (wa.me link)
+    function sendWhatsAppAlert(temp, hr, alertFlag, violationReason) {
+        const message = generateWhatsAppMessage(temp, hr, alertFlag, violationReason);
+        const encodedMsg = encodeURIComponent(message);
+        const waLink = `https://wa.me/${NURSE_WHATSAPP}?text=${encodedMsg}`;
+        window.open(waLink, '_blank');
     }
     
     // ======================== THINGSPEAK & DASHBOARD LOGIC ========================
@@ -376,8 +384,9 @@
     let countdownValue = 15;
     let chartInstance = null;
     let lastEmergencyState = false;
-    let lastViolationState = false; // to trigger email only on violation start
+    let lastViolationState = false;
     let lastViolationReason = "";
+    let lastTemp = 36.5, lastHr = 75;
     
     // DOM elements
     const tempValueDiv = document.getElementById('tempValue');
@@ -402,21 +411,13 @@
         return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
     }
     
-    // Push notification helper
-    function sendNotification(title, body, tag = 'clinical') {
-        if (Notification.permission === 'granted') {
-            new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/4228/4228704.png', tag });
-        }
-    }
-    
-    // Evaluate thresholds (NEW: temp safe 31-38°C, HR 60-100)
+    // Evaluate thresholds: TEMP 31-38, HR 40-100
     function evaluateThresholds(temp, hr, alertFlagFromField) {
         let tempWarning = false;
         let hrWarning = false;
         let insightMsg = '';
         let violationReason = "";
         
-        // Temperature check: 31-38°C normal
         if (temp < 31.0) {
             tempWarning = true;
             tempStatusSpan.innerText = '❄️ HYPOTHERMIA (<31°C)';
@@ -431,22 +432,20 @@
             tempStatusSpan.innerText = 'Normal range (31-38°C) ✓';
         }
         
-        // Heart rate check: 60-100
-        if (hr < 60) {
+        if (hr < 40) {
             hrWarning = true;
-            hrStatusSpan.innerText = hr < 50 ? '⚠️ SEVERE BRADYCARDIA (<60)' : '⚠️ BRADYCARDIA (<60 BPM)';
-            insightMsg = insightMsg || 'Heart rate below 60 BPM';
-            violationReason = violationReason ? "Temp & HR abnormal" : "HR too low";
+            hrStatusSpan.innerText = '⚠️ SEVERE BRADYCARDIA (<40 BPM)';
+            insightMsg = insightMsg || 'Heart rate below 40 BPM';
+            violationReason = violationReason ? "Temp & HR abnormal" : "HR too low (<40)";
         } else if (hr > 100) {
             hrWarning = true;
-            hrStatusSpan.innerText = hr > 130 ? '⚠️ SEVERE TACHYCARDIA (>100)' : '⚠️ TACHYCARDIA (>100 BPM)';
+            hrStatusSpan.innerText = '⚠️ TACHYCARDIA (>100 BPM)';
             insightMsg = insightMsg || 'Heart rate above 100 BPM';
-            violationReason = violationReason ? "Temp & HR abnormal" : "HR too high";
+            violationReason = violationReason ? "Temp & HR abnormal" : "HR too high (>100)";
         } else {
-            hrStatusSpan.innerText = 'Stable rhythm (60-100 BPM) ✓';
+            hrStatusSpan.innerText = 'Stable rhythm (40-100 BPM) ✓';
         }
         
-        // Progress gauges: temp range 28-42°C visual
         let tempPercent = Math.min(100, Math.max(0, ((temp - 28) / 14) * 100));
         tempGauge.style.width = `${tempPercent}%`;
         let hrPercent = Math.min(100, Math.max(0, (hr / 200) * 100));
@@ -455,22 +454,20 @@
         if (tempWarning) tempCard.classList.add('danger-glow'); else tempCard.classList.remove('danger-glow');
         if (hrWarning) hrCard.classList.add('danger-glow'); else hrCard.classList.remove('danger-glow');
         
-        // Final AI insight with alert flag priority
         if (alertFlagFromField === 1) {
             insightMsg = '🚨 CODE RED: Hardware alert flag (field3=1) — emergency protocol';
             violationReason = "Hardware alert flag (field3=1)";
         } else if (tempWarning && hrWarning) {
             insightMsg = '⚡ DUAL CRITICAL: Temp & HR outside safe zones';
         } else if (tempWarning) insightMsg = `🌡️ Temperature abnormal: ${temp.toFixed(1)}°C (safe 31-38)`;
-        else if (hrWarning) insightMsg = `💓 Heart rate abnormal: ${hr} BPM (safe 60-100)`;
-        else insightMsg = '✅ All vitals within safe ranges (Temp 31-38°C, HR 60-100)';
+        else if (hrWarning) insightMsg = `💓 Heart rate abnormal: ${hr} BPM (safe 40-100)`;
+        else insightMsg = '✅ All vitals within safe ranges (Temp 31-38°C, HR 40-100)';
         
         aiInsightSpan.innerText = insightMsg;
         const overallCritical = (tempWarning || hrWarning || alertFlagFromField === 1);
         return { overallCritical, tempWarning, hrWarning, violationReason: violationReason || insightMsg };
     }
     
-    // Update history table with thresholds
     function updateHistoryTable(feedsArray) {
         if (!feedsArray || feedsArray.length === 0) {
             historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No data</td></tr>';
@@ -487,7 +484,7 @@
             if (t !== '—' && hrVal !== '—') {
                 const tempNum = parseFloat(t);
                 const hrNum = parseInt(hrVal);
-                if (tempNum < 31 || tempNum > 38 || hrNum < 60 || hrNum > 100) thresholdViolation = true;
+                if (tempNum < 31 || tempNum > 38 || hrNum < 40 || hrNum > 100) thresholdViolation = true;
             }
             const statusIcon = (alertFlag === 1 || thresholdViolation) ? '<span class="badge bg-danger">⚠️ CRITICAL</span>' : '<span class="badge bg-success">Normal</span>';
             const alertDisplay = (alertFlag === 1) ? '🚨 Alert 1' : (thresholdViolation ? '⚠️ Range violation' : '—');
@@ -513,7 +510,7 @@
                 type: 'line',
                 data: { labels, datasets: [
                     { label: 'Temperature (°C) | safe 31-38', data: tempData, borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,0.05)', borderWidth: 3, pointRadius: 3, tension: 0.2, yAxisID: 'y' },
-                    { label: 'Heart Rate (BPM) | safe 60-100', data: hrData, borderColor: '#ff7b72', backgroundColor: 'rgba(255,90,70,0.02)', borderWidth: 3, pointRadius: 3, tension: 0.2, yAxisID: 'y1' }
+                    { label: 'Heart Rate (BPM) | safe 40-100', data: hrData, borderColor: '#ff7b72', backgroundColor: 'rgba(255,90,70,0.02)', borderWidth: 3, pointRadius: 3, tension: 0.2, yAxisID: 'y1' }
                 ] },
                 options: { responsive: true, maintainAspectRatio: true, interaction: { mode: 'index', intersect: false },
                     plugins: { tooltip: { mode: 'index', backgroundColor: '#0d1b2a' }, legend: { labels: { color: '#cbd5e6' } } },
@@ -524,7 +521,7 @@
         }
     }
     
-    // Main fetch
+    // Main fetch from ThingSpeak
     async function fetchClinicalData() {
         try {
             const url = `${API_BASE}?results=20`;
@@ -535,9 +532,11 @@
             if (!feeds || feeds.length === 0) throw new Error('No feeds');
             const latest = feeds[feeds.length - 1];
             const temp = latest.field1 ? parseFloat(latest.field1) : 36.5;
-            const hr = latest.field2 ? parseInt(latest.field2) : 80;
+            const hr = latest.field2 ? parseInt(latest.field2) : 75;
             const alertFlag = latest.field3 ? parseInt(latest.field3) : 0;
             
+            lastTemp = temp;
+            lastHr = hr;
             tempValueDiv.innerText = temp.toFixed(1);
             hrValueDiv.innerText = hr;
             lastUpdateSpan.innerText = formatTime(latest.created_at) || new Date().toLocaleTimeString();
@@ -545,29 +544,33 @@
             const { overallCritical, violationReason } = evaluateThresholds(temp, hr, alertFlag);
             
             const tempOut = (temp < 31 || temp > 38);
-            const hrOut = (hr < 60 || hr > 100);
+            const hrOut = (hr < 40 || hr > 100);
             const emergencyActive = (alertFlag === 1) || tempOut || hrOut;
             
             if (emergencyActive) {
                 emergencyBanner.classList.remove('d-none');
                 if (alertFlag === 1) emergencyMsgSpan.innerText = `🚨 CODE RED: Alert field3 | Temp ${temp.toFixed(1)}°C | HR ${hr} BPM`;
-                else if (tempOut && hrOut) emergencyMsgSpan.innerText = `🔴 DUAL CRITICAL: Temp ${temp.toFixed(1)}°C (31-38) & HR ${hr} (60-100)`;
+                else if (tempOut && hrOut) emergencyMsgSpan.innerText = `🔴 DUAL CRITICAL: Temp ${temp.toFixed(1)}°C (31-38) & HR ${hr} (40-100)`;
                 else if (tempOut) emergencyMsgSpan.innerText = `⚠️ TEMP CRITICAL: ${temp.toFixed(1)}°C outside [31-38°C]`;
-                else if (hrOut) emergencyMsgSpan.innerText = `⚠️ HR CRITICAL: ${hr} BPM outside [60-100]`;
+                else if (hrOut) emergencyMsgSpan.innerText = `⚠️ HR CRITICAL: ${hr} BPM outside [40-100]`;
                 alertFlagDisplay.innerHTML = '<span class="badge badge-critical"><i class="fas fa-skull-crosswalk"></i> EMERGENCY MODE ACTIVE</span>';
-                if (!lastEmergencyState && Notification.permission === "granted") {
-                    sendNotification('🚨 HEALTH EYE PRO ALERT', `Violation: ${violationReason}`, 'emergency');
+                
+                // Play unique sound
+                playAlertSound();
+                // Push notification
+                if (Notification.permission === 'granted') {
+                    sendPushNotification('🚨 HEALTH EYE PRO ALERT', `Violation: ${violationReason} | Temp ${temp.toFixed(1)}°C, HR ${hr} BPM`);
                 }
-                // Trigger email on new violation (only when entering violation state)
+                // WhatsApp auto-send on new violation (open chat with pre-filled message)
                 if (!lastViolationState) {
-                    await sendThresholdAlertEmail(temp, hr, alertFlag, violationReason);
+                    sendWhatsAppAlert(temp, hr, alertFlag, violationReason);
                 }
                 lastEmergencyState = true;
                 lastViolationState = true;
                 lastViolationReason = violationReason;
             } else {
                 emergencyBanner.classList.add('d-none');
-                alertFlagDisplay.innerHTML = '<span class="badge bg-secondary"><i class="fas fa-check-circle"></i> Stable - All vitals within safe ranges (temp 31-38, HR 60-100)</span>';
+                alertFlagDisplay.innerHTML = '<span class="badge bg-secondary"><i class="fas fa-check-circle"></i> Stable - All vitals within safe ranges (temp 31-38, HR 40-100)</span>';
                 lastEmergencyState = false;
                 lastViolationState = false;
             }
@@ -599,22 +602,38 @@
     }
     
     function manualRefresh() { fetchClinicalData(); countdownValue = 15; countdownSpan.innerText = countdownValue; }
+    
     function requestNotificationPerm() {
         if (Notification.permission !== 'granted') {
             Notification.requestPermission().then(perm => {
-                if (perm === 'granted') sendNotification('HEALTH EYE PRO', 'Notifications active → you will receive critical alerts');
+                if (perm === 'granted') sendPushNotification('HEALTH EYE PRO', 'Notifications active → critical alerts will be shown');
             });
-        } else sendNotification('HEALTH EYE PRO', 'Notifications already enabled');
+        } else {
+            sendPushNotification('HEALTH EYE PRO', 'Notifications already enabled');
+        }
+        // Also try to resume audio context for sound
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
     }
-    async function testEmailNow() {
-        await sendThresholdAlertEmail(36.8, 98, 0, "Test email from HEALTH EYE dashboard");
-    }
+    
+    // Manual WhatsApp button: uses latest known vitals
+    document.getElementById('manualWhatsAppBtn').addEventListener('click', () => {
+        if (lastTemp && lastHr) {
+            sendWhatsAppAlert(lastTemp, lastHr, 0, "Manual alert from dashboard");
+        } else {
+            sendWhatsAppAlert(36.5, 75, 0, "Manual test alert");
+        }
+    });
     
     window.addEventListener('load', () => {
         startRefreshCycle();
         document.getElementById('manualRefreshBtn').addEventListener('click', manualRefresh);
         document.getElementById('alertPermBtn').addEventListener('click', requestNotificationPerm);
-        document.getElementById('testEmailBtn').addEventListener('click', testEmailNow);
+        // pre-initialize audio context on first user interaction
+        document.body.addEventListener('click', () => {
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }, { once: true });
     });
 </script>
 </body>
